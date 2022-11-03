@@ -29,12 +29,8 @@ namespace CodeLuau
         {
             int? speakerId = null;
 
-            if (string.IsNullOrWhiteSpace(FirstName))
-                return new RegisterResponse(RegisterError.FirstNameRequired);
-            if (string.IsNullOrWhiteSpace(LastName))
-                return new RegisterResponse(RegisterError.LastNameRequired);
-            if (string.IsNullOrWhiteSpace(Email))
-                return new RegisterResponse(RegisterError.EmailRequired);
+            var error = ValidateData();
+            if (error != null) return new RegisterResponse(error);
 
             //put list of employers in array
             var emps = new List<string>() { "Pluralsight", "Microsoft", "Google" };
@@ -128,6 +124,14 @@ namespace CodeLuau
 
             //if we got this far, the speaker is registered.
             return new RegisterResponse((int)speakerId);
+        }
+
+        private RegisterError? ValidateData()
+        {
+            if (string.IsNullOrWhiteSpace(FirstName)) return RegisterError.FirstNameRequired;
+            if (string.IsNullOrWhiteSpace(LastName)) return RegisterError.LastNameRequired;
+            if (string.IsNullOrWhiteSpace(Email)) return RegisterError.EmailRequired;
+            return null;
         }
     }
 }
