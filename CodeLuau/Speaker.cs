@@ -29,52 +29,25 @@ namespace CodeLuau
         /// <returns>speakerID</returns>
         public RegisterResponse Register(IRepository repository)
         {
-            int? speakerId = null;
-
-            var error = ValidateData();
+            var error = ValidateRegistration();
             if (error != null) return new RegisterResponse(error);
 
+            var speakerId = repository.SaveSpeaker(this);
+            return new RegisterResponse(speakerId);
+        }
+
+        private RegisterError? ValidateRegistration()
+        {
+            var error = ValidateData();
+            if (error != null) return error;
+
             bool speakerAppearsQualified = AppearsExceptional() || !HasObviousRedFlags();
-            if (!speakerAppearsQualified)
-                return new RegisterResponse(RegisterError.SpeakerDoesNotMeetStandards);
+            if (!speakerAppearsQualified) return RegisterError.SpeakerDoesNotMeetStandards;
 
             var atLeastOneSessionApproved = ApproveSessions();
-            if (atLeastOneSessionApproved)
-            {
-                try
-                {
-                    speakerId = repository.SaveSpeaker(this);
-                }
-                catch (Exception e)
-                {
-                    //in case the db call fails 
-                }
-            }
-            else
-            {
-                return new RegisterResponse(RegisterError.NoSessionsApproved);
-            }
+            if (!atLeastOneSessionApproved) return RegisterError.NoSessionsApproved;
 
-            //if we got this far, the speaker is registered.
-            return new RegisterResponse((int)speakerId);
-        }
-
-        private bool ApproveSessions()
-        {
-            foreach (var session in Sessions)
-                session.Approved = !SessionIsAboutOldTechnology(session);
-
-            return Sessions.Any(s => s.Approved);
-        }
-
-        private bool SessionIsAboutOldTechnology(Session session)
-        {
-            foreach (var tech in OldTechnologies)
-            {
-                if (session.Title.Contains(tech) || session.Description.Contains(tech))
-                    return true;
-            }
-            return false;
+            return null;
         }
 
         private RegisterError? ValidateData()
@@ -103,6 +76,24 @@ namespace CodeLuau
             var ancientEmailDomains = new List<string>() { "aol.com", "prodigy.com", "compuserve.com" };
             if (!ancientEmailDomains.Contains(emailDomain)) return true;
             if (!(Browser.Name == WebBrowser.BrowserName.InternetExplorer && Browser.MajorVersion < 9)) return true;
+            return false;
+        }
+
+        private bool ApproveSessions()
+        {
+            foreach (var session in Sessions)
+                session.Approved = !SessionIsAboutOldTechnology(session);
+
+            return Sessions.Any(s => s.Approved);
+        }
+
+        private bool SessionIsAboutOldTechnology(Session session)
+        {
+            foreach (var tech in OldTechnologies)
+            {
+                if (session.Title.Contains(tech) || session.Description.Contains(tech))
+                    return true;
+            }
             return false;
         }
     }
