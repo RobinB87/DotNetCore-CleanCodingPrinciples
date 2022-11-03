@@ -32,20 +32,19 @@ namespace CodeLuau
             var error = ValidateData();
             if (error != null) return new RegisterResponse(error);
 
-            var preferredEmployers = new List<string>() { "Pluralsight", "Microsoft", "Google" };
-            var speakerIsQualified = YearsExperience > 10 || HasBlog || Certifications.Count() > 3 || preferredEmployers.Contains(Employer);
-            if (!speakerIsQualified)
+            bool speakerAppearsQualified = AppearsExceptional();
+            if (!speakerAppearsQualified)
             {
                 //need to get just the domain from the email
                 string emailDomain = Email.Split('@').Last();
                 var domains = new List<string>() { "aol.com", "prodigy.com", "compuserve.com" };
                 if (!domains.Contains(emailDomain) && (!(Browser.Name == WebBrowser.BrowserName.InternetExplorer && Browser.MajorVersion < 9)))
                 {
-                    speakerIsQualified = true;
+                    speakerAppearsQualified = true;
                 }
             }
 
-            if (speakerIsQualified)
+            if (speakerAppearsQualified)
             {
                 var approved = false;
                 if (Sessions.Count() != 0)
@@ -123,6 +122,17 @@ namespace CodeLuau
 
             //if we got this far, the speaker is registered.
             return new RegisterResponse((int)speakerId);
+        }
+
+        private bool AppearsExceptional()
+        {
+            if (YearsExperience > 10) return true;
+            if (HasBlog) return true;
+            if (Certifications.Count() > 3) return true;
+
+            var preferredEmployers = new List<string>() { "Pluralsight", "Microsoft", "Google" };
+            if (preferredEmployers.Contains(Employer)) return true;
+            return false;
         }
 
         private RegisterError? ValidateData()
