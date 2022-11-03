@@ -9,6 +9,8 @@ namespace CodeLuau
     /// </summary>
     public class Speaker
     {
+        private readonly List<string> OldTechnologies = new List<string> { "Cobol", "Punch Cards", "Commodore", "VBScript" };
+
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string Email { get; set; }
@@ -36,27 +38,8 @@ namespace CodeLuau
             if (!speakerAppearsQualified)
                 return new RegisterResponse(RegisterError.SpeakerDoesNotMeetStandards);
 
-            var approved = false;
-
-            var ot = new List<string>() { "Cobol", "Punch Cards", "Commodore", "VBScript" };
-            foreach (var session in Sessions)
-            {
-                foreach (var tech in ot)
-                {
-                    if (session.Title.Contains(tech) || session.Description.Contains(tech))
-                    {
-                        session.Approved = false;
-                        break;
-                    }
-                    else
-                    {
-                        session.Approved = true;
-                        approved = true;
-                    }
-                }
-            }
-
-            if (approved)
+            var atLeastOneSessionApproved = ApproveSessions();
+            if (atLeastOneSessionApproved)
             {
                 //if we got this far, the speaker is approved
                 //let's go ahead and register him/her now.
@@ -101,6 +84,24 @@ namespace CodeLuau
 
             //if we got this far, the speaker is registered.
             return new RegisterResponse((int)speakerId);
+        }
+
+        private bool ApproveSessions()
+        {
+            foreach (var session in Sessions)
+                session.Approved = !SessionIsAboutOldTechnology(session);
+
+            return Sessions.Any(s => s.Approved);
+        }
+
+        private bool SessionIsAboutOldTechnology(Session session)
+        {
+            foreach (var tech in OldTechnologies)
+            {
+                if (session.Title.Contains(tech) || session.Description.Contains(tech))
+                    return true;
+            }
+            return false;
         }
 
         private RegisterError? ValidateData()
