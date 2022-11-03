@@ -124,6 +124,14 @@ namespace CodeLuau
             return new RegisterResponse((int)speakerId);
         }
 
+        private RegisterError? ValidateData()
+        {
+            if (string.IsNullOrWhiteSpace(FirstName)) return RegisterError.FirstNameRequired;
+            if (string.IsNullOrWhiteSpace(LastName)) return RegisterError.LastNameRequired;
+            if (string.IsNullOrWhiteSpace(Email)) return RegisterError.EmailRequired;
+            return null;
+        }
+
         private bool AppearsExceptional()
         {
             if (YearsExperience > 10) return true;
@@ -133,14 +141,6 @@ namespace CodeLuau
             var preferredEmployers = new List<string>() { "Pluralsight", "Microsoft", "Google" };
             if (preferredEmployers.Contains(Employer)) return true;
             return false;
-        }
-
-        private RegisterError? ValidateData()
-        {
-            if (string.IsNullOrWhiteSpace(FirstName)) return RegisterError.FirstNameRequired;
-            if (string.IsNullOrWhiteSpace(LastName)) return RegisterError.LastNameRequired;
-            if (string.IsNullOrWhiteSpace(Email)) return RegisterError.EmailRequired;
-            return null;
         }
     }
 }
